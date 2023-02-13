@@ -1179,7 +1179,6 @@ List* makeNumDivPos (Problem* p, List* left, List* right) {
     List* zero = makeNumber(p,0);   
     List* q = extendNumber(p, zero, n->count);        // quotient 
     List* r = extendNumber(p, zero, n->count);        // remaineder 
-    DeleteList(zero);
     // init walking elements
     Node* ni = n->first->next;              // n(i); skip sign bit; starting with most significant bit
     Node* qi = q->first->next;              // q(i); skip sign bit; starting with most significant bit
@@ -1187,6 +1186,9 @@ List* makeNumDivPos (Problem* p, List* left, List* right) {
     // no solution if d == 0
     List* d0 = makeNumEq(p, d, zero);
     constrainBoolFalse(p, d0->last->value);
+
+    // no longer needed
+    DeleteList(zero);
     
     //  for each digit of n and q, starting with most significant bit
     while (ni != NULL && qi != NULL) {       
