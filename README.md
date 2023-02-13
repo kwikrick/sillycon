@@ -1,14 +1,12 @@
 SillyCon
 ----
 SillyCon is an interpretor for a silly constraint language with Boolean
-and numerical constraints. See documentation for more information.
+and numerical constraints. 
 
 Boolean Propagation Solver
 ---
 The Boolean Propagation Solver (BPS) is a C library for solving Boolean
 Propagation Problems. It is used by Sillycon. 
-
-See documentation for more information. 
 
 Copyright & Licence
 -------------------
@@ -35,18 +33,19 @@ See LICENCE file.
 
 Files
 -----
-README:     this file
-LICENCE:    GPL version 3 licence information
-doc/*       various documentation
-html/*      browser sillycon demo and documentation
-sillycon/*  SillyCon source code
-core/*      BPS source code
-test/*      test program source code
-include/    include files for BPS
-bin/*       executables
-examples/*  example input files
 
-Instructions
+    README:     this file
+    LICENCE:    GPL version 3 licence information
+    doc/*       various documentation
+    html/*      browser sillycon demo and documentation
+    sillycon/*  SillyCon source code
+    core/*      BPS source code
+    test/*      test program source code
+    include/    include files for BPS
+    bin/*       executables
+    examples/*  example input files
+
+Build Instructions
 ------------
 These instructions are for a Linux or Unix-like system.
 
@@ -68,17 +67,24 @@ To install the SillyCon interpretor system wide, type
 The test program and the sillycon program are created in the bin
 directory. Only sillycon is installed system wide by make install.
 
+Running
+----
+
 The examples directory contains input files that can be used 
 for the test program (*.prop) and examples that can be used
 for the sillycon program (*.silly)
 
 To run a test, from the bps directory, type
     
-    bin/test exmaples/test1.prop
+    bin/test examples/test1.prop
 
 To run a sillycon test
 
-    bin/sillycon exmaples/sqrt.silly
+    bin/sillycon examples/sqrt.silly
+
+Sillcon can also be run in interactive mode, reading from the standard input
+
+    bin/sillycon
 
 For using SillyCon interpretor and Boolean Propagation Solver, 
-see documentation files.
+see html documentation files.
