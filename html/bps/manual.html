@@ -166,53 +166,10 @@ special:
 Comments are encosed in a pair of double quotes: "this is a comment"
 </p>
 
-<p>
-The '?' (PNTR, short for 'pointer') symbol, followed by a number, can be used for numbered variables.
-So '?1' refers to a variable and '?2' refers to another variable. 
-Variable '?65' to '?90' are the same as variables 'A' to 'Z' 
-and '?97' to '?122' equal 'a' to 'z'. 
-Note that the number following '?' cannot be determined by 
-solving a sub-expression. It must be a literal, positive number. 
-The maximum variable number is currently 
-hard-coded to 999, but this may change in future releases. 
-<p>
-</p>
-Note that Inside the IND expression, the PNTR operator works the other way around. It converts
-the name of a variable (again, not a complete expression, but a single character variable name)
-to a number, i.e. the value of that variable in the solution of right hand side expression. 
-(It would actually more logical to use the PNTR in an IND as it works outside, but allow variables
-used in a PNTR. Normal variables will than simply take on a value, and pointers can be used
-to refer to variables. We might do this in the future, However, this will break backwards compatibility.) 
-</p>
-
-<p>
-The COUNT, EVAL, MIN, MAX and IND operators will interpret one 
-operand (the only one for COUNT, or the second one for the others) 
-as a sub-problem and solve it. 
-After solving this sub-problem, the
-first operand (of MIN,MAX,EVAL,IND) will be converted into a new expression,
-which is part of the main problem. (And this problem will be solved in the
-normal solving process).
-</p>
-
-<p>
-Note that MIN and MAX operators do not generate all solutions for the
-subproblem. In fact, they are quite efficient. The boolean variables are
-ordered such that the first solution found is the desired solution.  On the other
-hand, the COUNT, EVAL and IND operators will generate all solutions for he
-sub-problem, so these can be very expensive operations. 
-</p>
-
-<p>
-A root expression (or problem) is implicitly constrained to 1 (see @ operator) if it starts
+The root expression is implicitly constrained to 1 (see @ operator) if it starts
 with a boolean operator or comparator (EQ, NOT, GREATER, etc.). If
 the root expression is a numerical expression (see ADD, SUB, etc.) the
 result will be constrained equal to a variable '?1'. 
-</p>
-
-<p>Also, the problem solving
-operators (see EVAL, IND, MIN, MAX and COUNT) will implicitly
-constrain the subproblem expression (one of the input expressions) to 1.
 </p>
 
 <p>
@@ -240,7 +197,55 @@ will be interpreted as the following problem
 </p>
 
 
+<p>Also, the problem solving
+	operators (see EVAL, IND, MIN, MAX and COUNT) will implicitly
+	constrain the subproblem expression (one of the input expressions) to 1.
+</p>
+
 <p>
+	The COUNT, EVAL, MIN, MAX and IND operators will interpret one 
+	operand (the only one for COUNT, or the second one for the others) 
+	as a sub-problem and solve it. 
+	After solving this sub-problem, the
+	first operand (of MIN,MAX,EVAL,IND) will be converted into a new expression,
+	which will be solved in a second solving step.
+	</p>
+	
+	<p>
+	Note that MIN and MAX operators do not generate all solutions for the
+	subproblem. In fact, they are quite efficient. The boolean variables are
+	ordered such that the first solution found is the desired solution.  On the other
+	hand, the COUNT, EVAL and IND operators will generate all solutions for he
+	sub-problem, so these can be very expensive operations. 
+	</p>
+	
+<p>
+	The '?' (PNTR, short for 'pointer') symbol, followed by a number, can be used for numbered variables.
+	So '?1' refers to a variable and '?2' refers to another variable. 
+	Variable '?65' to '?90' are the same as variables 'A' to 'Z' 
+	and '?97' to '?122' equal 'a' to 'z'. 
+	Note that the number following '?' cannot be determined by 
+	solving a sub-expression. It must be a literal, positive number. 
+	However, the IND expression can be used to create problems with a variable that is pointed to by another variable.  
+	The maximum variable number is currently 
+	hard-coded to 999, but this may change in future releases. 
+	
+	<p>
+	The IND expression first solves the right operand. For all the solutions of the right operand,
+	it will create a new expression based on the left operand and replacing all variables in it with
+	a new variable pointed to by the value of the variable in that solution. Effectively, all 
+	variables in the left operand that are also in the right operand, will be replaced with a PNTR
+	operator and a number. All these expression will be joined by a union operator, creating a new
+	problem to be solved.  
+	
+	</p>
+	Note that Inside the left operand of an IND expression, the PNTR operator works the other way around. It converts
+	the name of a variable (again, not a complete expression, but a single character variable name)
+	to a number, i.e. the value of that variable in the solution of right operand. 
+	(It would actually more logical to use the PNTR in an IND as it works outside, but allow variables
+	used in a PNTR. Normal variables will than simply take on a value, and pointers can be used
+	to refer to variables. We might do this in the future, However, this will break backwards compatibility.) 
+	</p>
 
 <p>Last update: 2013-12-05</p>
 
