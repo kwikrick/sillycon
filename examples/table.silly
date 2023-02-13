@@ -1,0 +1,10 @@
+"a n by n table of values: v_n*i+j = v_i * v_j with 0 < i,j <= n"
+
+`=k*?i?j 
+&=n5
+ &!<i0
+  &<in
+   &!<j0
+    &<jn
+     =k+1+*inj
+

@@ -1,0 +1,289 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+	<head>
+		<title>Boolean Propagation Solver</title>
+		<link rel="stylesheet" href="../kwikrick.css">	    
+	</head>
+
+<body>
+  <div class="envelope">
+	<center>
+		<h1>Boolean Propagation Solver</h1>
+	</center>
+
+
+<p>
+A Boolean Propagation Solver (BPS) finds solutions for Boolean Propagation Problems (BPP).
+</p>
+
+<p>
+A Boolean propagation problem is a set of rules of the form:
+<pre>
+	lhs -&gt; rhs
+</pre>
+where lhs (left hand side) is a set of Boolean literals and rhs (right hand side) is a set of Boolean literals. 
+</p>
+
+<p>A Boolean literal represents an assignment of a value to a Boolean variable. 
+For a variable x, there are two literals: x=True and x=False. We can also write these 
+as (x,True) and (x,False), or as +x and -x for short. 
+(In a computer implementation, we can represent literals as integers, and variables as positive integers)
+<p>
+
+<p>In this document we'll mostly use the notation 
+<pre>
+	lhs:rhs
+</pre>
+for a rule (since the dash-and-greater-than arrow is not so easy to write in html). Thus a problem rule might look
+like:
+<pre>
+	-x: -z
+	-y: -z
+	z: x y
+	x y : z
+	x -z: -y
+	y -z: -x
+</pre> 
+</p>
+
+<p>
+The interpretation of a rule is as follows: 
+<ul>
+<li>
+	When all literals in the lhs are in a model,  
+	all literals in the rhs are added to the model.
+</li>
+</ul>
+</quote> 
+A model is simply a set of literals. 
+</p> 
+
+<p>
+A boolean propagation solver attempts to find a model, i.e. a sets of literals, such that 
+<ul>
+<li>for each variable x in the problem, either +x or -x is n the model (not both, and not none, or it is not a solution).</li>
+<li>all the propagation rules in the problem have been followed</li>
+</ul>
+Such a model is a solution for the problem. 
+</p>
+
+<p>
+Note that a propagation rule is not the same as the following implication: If 
+all literals in the lhs are in a solution,  
+all literals in the rhs are in the solution. That would be equivalent to: 
+if the rhs is NOT in the solution,
+then the lhs must NOT be in the solution. This is not the case for propagation rules. 
+The propagation rule is mechanical rather than a constraint, it is 
+an instruction that you must follow when solving a BPP. When you are trying to construct a solution, 
+and you have choosen to add all the lhs literals to a partial solution, then you must also add all the rhs literals to the partial solution.
+</p>
+
+<p>
+What use have these boolean propagation problems and solvers? 
+A BPP can be used to represent various types of constraints, such as Boolean constraints and numerical constraints, which are a useful to model complex systems. Yet, a BPS is easy to implement and can be quite efficient. Thus boolean propagation provides a very generic yet practical approach to constraint based modelling. 
+</p>
+
+<h2>Solving algorithm</h2>
+<p>
+The basic solving approach is to find as many conflicts as quickly as possible. A conflict occurs when 
+both literals of a variable x, i.e. +x and -x are in a model. So for each variable x, it is determined
+whether either +x or -x can be added to the model without causing conflict (via one or many propagations).
+This reduces the number of variables for which a choice (adding +x or -x) has to be made. 
+Choices are expensive, because if you choose wrong you will have to backtrack later.
+If we known that only one of +x or -x leads to a conflict, then we must! add the other to the model, 
+and we cannot make a wrong choice. When both lead to conflict, then we are at a dead end (due to some wrong choice earlier, or because the problem has no solutions). Only as a last resort, when we cannot discover and more conflict causing literals, do we make a choice.  
+</p>
+<p>
+A basic algorithm:
+<pre>
+	Global variables:
+		A set of free variables (initally all problem variables)
+		A model (initially empty set of literals) 
+		A set of solutions (initially empty)
+		A stack (empty stack of literals)
+	
+	Solve:
+		Repeat:
+			For each free variable x:
+				Propagate +x and Unpropagate +x
+				Propagate -x and Unpropagate x
+				If both propagations result in conflict, 
+					Backtrack (recursive)
+					return
+				If one results in conflict, propagate the other again
+				If none result in conflict, the variable remains free
+		Until number of free variables doesn't change
+		
+		If no free variables:
+			add model to solutions	
+			Backtrack (recursive)
+		else
+			Pick any free variable x
+			Propagate +x 
+			Push +x on the stack
+			Solve (resursive)
+		
+	Propagate l:
+		if l not in the model
+			If -l already in model
+				return conflict!
+			else
+				Remove |l| from free variables
+				Add l to model
+				For every rule with l in the lhs
+					if all lhs literals in model:
+						For all k in rhs
+							Propagate k
+		
+	Unpropagate l:
+		if l in the model
+			For every rule with l in the lhs
+				if all lhs literals in model:
+					For all k in rhs
+						Unpropagate k
+			Remove l from model
+			Add |l| to free variables
+	
+	Backtrack:
+		If stack is empty
+			return 
+		If +x on stack:
+			Remove +x from stack
+			Unpropagate +x
+			Add -x on stack
+			Propatate -x
+			Solve (recursive)
+		if -x on stack
+			Remove -x from stack
+			Unpropagate -x
+			Backtrack (recursive)
+	
+</pre>
+
+<p>
+Note: The algorithm can be easily be implemented iteratively, but the 
+recursive version is easier to understand. 
+</p>
+
+<p>The worst case running time
+of the algorithm is obviously exponential to the number of variables in the
+problem. But for most problems with only a few solutions, running time is
+acceptable due to early pruning of branches that do not lead to a solution.  
+</p>
+
+<p>
+An iterative implementation that I wrote, works as follows: 
+A function Init initialises the model and the set of free variables.
+Subsequent calls to a function Next updates the model
+so that it becomes the next (or first) solution, and returns Ok, or returns Failure if there are no (more) solutions. 
+The advantages of this approach are:
+<ul>
+<li>Not all solutions have to be generated if only one or a few are required by the application.</li>
+<li>It is possible to order the variables, such that the first solution has useful properties. In fact, it's possible to define integer constraint problems where the solution with a smallest value is found first.</li>
+<li>The solutions are not copied, but are simply an end state of the model, which is modified in place
+by the solver (the application should not modify it, obviously, unless you really know what you are doing)</li>
+</li>
+</ul>   
+  
+Also, the iterative implementation uses counters for each rule to keep track of the number of lhs 
+literals that are in the model. Thus the Propagate and Unpropagate functions don't neet to test
+all lhs variables every time a rule is tested.   
+</p>
+
+<p>
+Why not <a href="source.tgz">download</a> the C source code and have a look at the implementation?
+</p>
+
+<h2>Boolean constraints</h2>
+
+The simplest Boolean constraint x=true or true(x) can be represeted in a BPP as:
+<pre>
+	-x : +x
+</pre>
+Why? The solver must choose to either include +x or -x in a solution. If chooses to includes -x, then +x must also be 
+included by this rule. Then both +x and -x are in the solution, which is not allowed. Therefore, the
+only choice the solver can make is to include +x in the solution. No rule says anything about that (yet)
+so this is a valid solution for the problem.  
+
+Thus, the constraint x=false or false(x) can be represented as:
+<pre>
+	+x: -x
+</pre>
+
+Note that is we create a BPP with both these rules, then the problem has no solutions. A BPP with no rules at all (but one variable, x) 
+has two soluions. 
+
+More interesting constraints on Boolean variables are the Boolean operators And, Or, Xor, etc.
+We define these operators as constraints with three variables: </p>
+
+<p>
+The equation c = a | b is written as a constraint Or(a,b,c). 
+This is mapped to a BPP as follows:
+<pre>
+	+a    : +c
+	+b    : +c
+	-c    : -a -b
+	+c -a : +b
+	+c -b : +a
+	-a -b : -c
+</pre>
+Note that we can write more rules, i.e. -a b : b, but this is not nessecary; the rules above to completely define the
+Or constraint. 
+
+<p>
+The constraint And(x,y,z), equivalent to the equation z = x & y, can be represented as: 
+<pre>
+	-x   : -z
+	-y   : -z
+	z    : x y
+	x y  : z
+	x -z : -y
+	y -z : -x
+</pre> 
+</p>
+
+<p>
+The Not(x,y) constraint, equivalent to the y = !x, can be represented as: 
+<pre>
+	-x : y
+	x  : -y
+	y  : -x
+	-y : x
+</pre> 
+</p>
+
+We can write similar rules for other Boolean constraints, e.g. Xor(a,b,c), Equals(a,b,c), Implies(a,b,c).
+Compelx boolean expressions can be constructed by combining constraints, and introducing variables for each
+subexpression, i.e. we introduce Boolean variables with 'complex' names, such as "a|b".  So, the following
+expression:
+<pre>
+	y = z | (b & c)
+</pre>
+becomes:
+<pre>
+	True("y=z|(b&c)")
+	Equals("y", "z|(b&c)", "y=z|(b&c)")
+	Or("z", "b&c", "z|b&c")
+	And("b," "c", "b&c")
+</pre>
+
+This in turn can be converted to a BPP. 
+Our original problem with 4 variables and 3 operators (and one implicit constraint in the equals) is converted into a BPP with 7 variables and 19 rules. This may seem inefficient, but using a BPS is it readily solved. 
+
+<h2>Integer constraints</h2>
+
+<p>
+Numerical constraints on integers can be written using Boolean constraints, which can be mapped to BPP as shown above. Basically, we use boolean constraints just like logic gates etched on a piece of silicon, usually known as a chip. 
+</p>
+
+<p>
+See SillyCon for an example. 
+</p>
+
+<p><b>UNDER CONSTRUCTION</b></p> 
+
+<p>Last update: 2013-03-12</p>
+
+  </div>
+</body>
+</html>

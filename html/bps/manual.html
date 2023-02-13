@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+	<head>
+		<title>SillyCon Manual</title>
+		<link rel="stylesheet" href="../kwikrick.css">	    
+	</head>
+
+<body>
+  <div class="envelope">
+	<center>
+		<h1>SillyCon Manual</h1>
+	</center>
+
+
+<p>
+SillyCon is a silly constraint language.
+It allows one to specify integer constraint problems, and it solves them for you!
+</p>
+
+<p>
+An integer constraint problem
+is an expression with numbers, variables and operators (such as addition,
+multiplication, comparisons, boolean logic, and some special constraint solving
+operators). A constraint problem defines the allowed values of the variables. 
+A constraint problem is solved by a constraint solver (also part of SillyCon) which
+returns one or more solutions (i.e. values for the variables) if there are any. 
+</p>
+
+</p>
+Constraint problems in SillyCon are entered using a prefix notation. All puctuation 
+characters are operators. All alphabetic characters are variables. Seqeuences of digits
+are numbers. Whitespace is ignored (but may be used to separate numbers). 
+Note that its not possible to declare variable names (or operators) of 
+more than one character. This is a bit silly. 
+</p>
+
+<p>
+The SillyCon interpretor program accepts input from the stdin stream or from a file given 
+as the first command line argument. As soon as a complete expression has been entered (i.e. each operator
+has the required number of operands), it will be considered a 
+problem and it will be solved. 
+</p>
+
+<p>
+(The SillyCon web demo accepts input from a form, or in the URL 
+using a POST format ?expression=...).
+</p>
+
+<p>
+Typing:
+</pre>
+  =10*xy
+</pre>
+<p>(Meaning x*y=10)</p>
+<p>
+Will give:
+<pre>
+    x = 1 & y = 10
+    x = 2 & y = 5
+    x = 5 & y= 2
+    x = 10 & y = 1
+    x = -1 & y = -10
+    x = -2 & y = -5
+    x = -5 & y= -2
+    x = -10 & y = -1
+</pre>
+
+<p>
+To solve problems, the input expression is converted to a Boolean 
+propagation problem and solved using the <a href="bps.html">Boolean Propagation Solver</a>.
+Some statistics will be shown before, during and after the solving process. 
+</p>
+
+<h2>Input Language</h2>
+
+<p>The input is a sequence of expressions. Each expression is interpreted as a
+separate problem and solved seperately, i.e. constraints on variables in one problem 
+are not passed to then next problem.
+</p>
+
+</p>
+An expression is a variable, a constant, or a composite expression
+consisting of an operator and one or more subexpressions.
+</p>
+
+<p>
+Constants are sequences of digits; e.g 1 100 828527 00027
+</p>
+
+<p>
+Variables are single alphabetic characters a-z and A-Z; so
+'Foo' and 'bar' are just sequences of three variables, the interpretation
+depenends on the context (i.e. preceding operator). 
+For example, '+xy' or '*px' are complete expressions; 
+i.e. one operator with two operands. 
+</p>
+
+<p>
+Constants and variables are signed integer numbers. 
+Negative constants are entered using the unary - operator. 
+The result of an operator is also a signed integer number. 
+</p>
+
+<p>
+In geneneral, numbers (i.e. constants or results of operators) 
+can be any number of bits. However, variables have a fixed size, 
+i.e. the number of bits. This is currently hard-coded in the program
+(by a #define) but this will probaby be made dynamic in the future.
+</p>
+
+<p>
+The internal binary representation (i.e. after integer probems are converted to
+binary problems) is two's compliment. (You may want to know this if you use the
+boolean operators on numbers).  
+</p>
+
+<p>
+Operators are single punctuation characters; operators have
+1 or 2 operands. Operands can be any expression, i.e. a constant,
+a variables or an operator-expression. 
+</p>
+
+<p>
+The accepted operators are the following:
+</p>
+
+<pre>
+symbol  name    arity   meaning
+-------------------------------
+integer arithmetic:
+-       NEG     1       integer negation
++       ADD     2       integer addition
+*       MUL     2       integer multiplication
+/       DIV     2       integer division (quotient)
+%       MOD     2       integer floor modulus (remainder)
+
+integer comparison:
+=       EQUAL   2       1 if operands are equal (bit for bit), otherwise 0
+&gt;       GT      2       1 if operand 1 greater than operand 2, otherwise 0
+&lt;       LT      2       1 if operand 1 less than operand 2, otherwise 0
+
+boolean logic:
+!       NOT     1       binary NOT
+&       AND     2       binary AND   
+|       OR      2       binary OR 
+^       XOR     2       binary XOR
+:       IMPL    2       binary IMPL
+
+solving:
+@       CON     1       constrain the operand equal to 1
+#       COUNT   1       number of solutions of operand 1
+$       MAX     2       maximum value of operand 1 for all solutions of operand 2   
+_       MIN     2       minimum value of operand 1 for all solutions of operand 2
+'       EVAL    2       set of values of operand 1 for all solutions of operand 2
+`       IND     2       union of constraints of operand 1 where variables in operand 1 
+			are replaced by variables pointed to by values of those
+			variables in solutions of operand 2        
+special:
+?       PNTR    1       A pointer. Convert a number to variable (vice versa in an IND)
+"       comment
+
+(reserved: . , \ [] () ~ ; )
+</pre>
+
+<p>
+Comments are encosed in a pair of double quotes: "this is a comment"
+</p>
+
+<p>
+The '?' (PNTR, short for 'pointer') symbol, followed by a number, can be used for numbered variables.
+So '?1' refers to a variable and '?2' refers to another variable. 
+Variable '?65' to '?90' are the same as variables 'A' to 'Z' 
+and '?97' to '?122' equal 'a' to 'z'. 
+Note that the number following '?' cannot be determined by 
+solving a sub-expression. It must be a literal, positive number. 
+The maximum variable number is currently 
+hard-coded to 999, but this may change in future releases. 
+<p>
+</p>
+Note that Inside the IND expression, the PNTR operator works the other way around. It converts
+the name of a variable (again, not a complete expression, but a single character variable name)
+to a number, i.e. the value of that variable in the solution of right hand side expression. 
+(It would actually more logical to use the PNTR in an IND as it works outside, but allow variables
+used in a PNTR. Normal variables will than simply take on a value, and pointers can be used
+to refer to variables. We might do this in the future, However, this will break backwards compatibility.) 
+</p>
+
+<p>
+The COUNT, EVAL, MIN, MAX and IND operators will interpret one 
+operand (the only one for COUNT, or the second one for the others) 
+as a sub-problem and solve it. 
+After solving this sub-problem, the
+first operand (of MIN,MAX,EVAL,IND) will be converted into a new expression,
+which is part of the main problem. (And this problem will be solved in the
+normal solving process).
+</p>
+
+<p>
+Note that MIN and MAX operators do not generate all solutions for the
+subproblem. In fact, they are quite efficient. The boolean variables are
+ordered such that the first solution found is the desired solution.  On the other
+hand, the COUNT, EVAL and IND operators will generate all solutions for he
+sub-problem, so these can be very expensive operations. 
+</p>
+
+<p>
+A root expression (or problem) is implicitly constrained to 1 (see @ operator) if it starts
+with a boolean operator or comparator (EQ, NOT, GREATER, etc.). If
+the root expression is a numerical expression (see ADD, SUB, etc.) the
+result will be constrained equal to a variable '?1'. 
+</p>
+
+<p>Also, the problem solving
+operators (see EVAL, IND, MIN, MAX and COUNT) will implicitly
+constrain the subproblem expression (one of the input expressions) to 1.
+</p>
+
+<p>
+So, the following numerical expession 
+<pre>	
+	+ 3 4
+</pre> 
+will be interpreted as the following problem
+<pre>
+	@=?1+3 4
+</pre> 
+(and the solution will be ?1=7)
+</p>
+
+<p>
+And the following boolean expression
+<pre>
+	=x3 
+</pre>
+will be interpreted as the following problem
+<pre>
+	@=x3 
+</pre>
+(and the solution will be x=3)
+</p>
+
+
+<p>
+
+<p>Last update: 2013-12-05</p>
+
+  </div>
+</body>
+</html>

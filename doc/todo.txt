@@ -1,0 +1,57 @@
+Bugs:
+ - sillycon
+	- $x1 -> -256!! should be 255.
+	- memory leak: cleanup parsed expressions 
+	
+
+Solver (BPS)
+- cleanup  NextSolution by getting rid of 'backtrack' mode variable
+- make Propagate and Unpropagate iterative instead of recursive?
+- better C API (instantiate solver from text file, bin file, List and Problem?)
+- C++ API 
+- Python API
+- API for editable problems
+
+SillyCon -> SeriousCon:
+- allow longer variable names
+- automatically determine varibale length (#bits) or define variable length
+- define new constraints (macros, functions, decode/encode, etc)
+
+       ENCODE symbol ; arity 1: ;e encode the constraints in the expression e to a string of bits 
+       DECODE symbol . arity 2: .Sx for all solutions of S, decode S and return variable named x in S 
+
+   example:
+
+    S(x,y,z)-> z = x*x + y*y
+
+    &=S;=.Sz+*.Sx.Sx*.Sy.Sy     # define constraint S = (S.z = S.x*S.x + S.y*S.y)
+    &=.Sx3                   # S.x  = 3
+    &=.Sy4                   # S.y  = 3
+     .Sz                     # $1 = S.z
+
+
+- define different types of variables (uint8,sint32, float64, string, struct)
+- Turing Completeness?
+- improve interactive
+    - walk though solutions interactively and re-use solutions
+- clean up code (e.g. makeNum* functions repeated code)
+- move Simplify to bps.c 
+- re-implement named variables  as variable length lists of literals
+   this will allow further simplification of problem
+- simplify parts of expressions
+- input and output
+- events and calls to other programs/libraries
+- pointers/indirection (create constraints on the fly during solving)
+
+
+SillyCon -> IOCCC:
+- reduce code size
+    - fixed number of bits for numbers
+    - remove problem/solver 'classes'
+    - get rid of list/set, or: make extensive use of them
+    - generalize makeNum* functions - get rid of repeated code
+    - more generic input language so integer constraints defined outside code
+- only two-argument operators (modify CON,NEG,NOT,COUNT)?
+- somehow encrypt/mangle/entwine the program with the solver
+- obfuscate
+

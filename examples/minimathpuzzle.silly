@@ -1,0 +1,6 @@
+"find consecutive numbers x,y,z such that x+y+z = x*y*z
+ solutions:
+ x,y,z = 1,2,3; -3,-2,-1; -1;0;1"
+
+&=z+y1&=y+1x=**xyz++xyz
+

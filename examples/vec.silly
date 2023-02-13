@@ -1,0 +1,8 @@
+"create a vector with offset o and length l and value x,x,x,... and constrain it to x (=100)"
+`&=vx
+  =x100
+ &=o1
+   &=l8
+    &|=vo>vo
+     <v+ol
+

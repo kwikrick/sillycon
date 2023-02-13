@@ -1,0 +1,173 @@
+A fun language for building and solving expressions
+----
+general ideas:
+we want to keep syntax as simple as possible; 
+alternative approaches:
+ - just a sequence of numbers, like the current (2012-02-15)  solver input
+ - (almost) everything is a macro?
+ - rule based substitution system? 
+ - functional?
+ - esotheric?
+
+Example:
+ 
+x := var_int(8)         // assignment
+y := var_int(8)
+z := mul_int(x,y)       
+z = const_int(100)      // constraint
+solve x,y               
+  -> x  = 20, y =  5
+  -> x = 10, y = 10
+  etc
+for x,y do
+    k = add_int(x,y)    
+    solve k
+        -> k = 25
+        -> k = 20   // next iteration of for...
+        etc
+if x = y then
+    solve x,y 
+        -> x = 10, y = 10
+else
+    solve x
+        -> x = 2,50,4,25,5,20
+
+
+
+Notes:
+
+There are different kinds of variables: those in the high level
+   'fun' language, which represent numbers, etc, and those in the low level
+   'solver' language which are literals/literal pairs. High level variables are
+   (ALWAYS?) lists of literals? Do we not also need type information,
+   i.e. boolean, integer, float? Or can we encode the type in the
+   literals? Thus, variables are lists of literals that encode how
+   they are represented to the user. It could even be a program!
+
+Can we extend/modify the currnt low-level language 
+(literals are positive/netahtive numbers, 0 termintates lhs/rhs)
+so that solutions can be interpreted as programs in that language. 
+
+In fact, the output function of the solver langiage can be used
+to construct a sequence of numbers, which can be used as input 
+again for the solver. 
+
+So we have the genericity/turing completeness, we just need to make it 
+more convienent. 
+
+Output a sequence of literals as
+ - string
+ - integer
+ - float
+
+Use it as:
+ - input/output
+ - program
+ - condition
+
+----
+
+We could use the Nest structure to encode various input & output representations
+
+((()()())) -> 1110101000 
+
+Problem: Nests are inherently variable length; to encode similar things, e.g. numbers from 0-256, we
+need a different number of bits, thus a different number of literals. Boolean Propagagation rules
+are always of a fixed number of literals.
+
+Nests can also be encoded as pointers to lists of pointers. This requires a database of all nests in use
+in the program. I dont see how how to make a sensible coupling with literals of propagation rules.
+
+---- 
+
+Meta-rules and interpreting sequences of bits as rules
+
+The idea of meta-rules is to add rules on the fly during the
+boolean propagation/solving process. 
+
+meta rule:
+
+i1 i2 .... iN 0 o1 o2 ..... oN.
+
+There is no way to ditinguish this from a normal rule, unless we change
+two syntax ( a rule has two terminating zeros). For now we'll just 
+prepend 'M:'
+
+M: i1 i2 .... iN 0 o1 o2 ..... oN.
+
+If all literals i1 ... iN are in the solution, and all 
+variables(!) o1...oN, -o1....-oN. Then interpret o1...oN as
+a rule and add it to the rule set. 
+
+meta variable:
+
+Instead of a meta rule, we could introduce a meta variable. 
+When the meta-variable is completely determined in the solution
+it is interpreted as a rule.
+
+M: 0 o1.....oN 0 
+
+This is the same as a meta-rule really....
+
+Interpretation:
+
+o1....oN -> each evalutes to 0 or 1. Encodes a sequence of numbers.
+Each number in the sequence must specify a number.
+We could encode a number with a fixed number of bits, in two's complement. 
+More compact and extensible would be a variable length encoding.
+
+Begin with unary representation of number of bits, followed by that 
+number of bits.
+
+0 1 -> length 1, value 0
+0 0 -> length 1, value 1
+10 00 -> length 2, value 3
+10 01 -> length 2, value 4
+10 10 -> length 2, value 5
+10 11 -> length 2, value 6
+110 0000 -> length 4, value 7
+110 0001 -> length 4, value 8
+110 1111 -> length 4, value 7+15=22
+....
+1110 00000000 -> length 8, value 23
+....
+1110 11111111 -> length 8, values 9+255=264
+..
+111110 i0.....i32 -> 2^5 = 32bits, values ...
+
+Problem with variable length is that rules must know the value to
+determine the needed number of literals. Unless we restart numbering
+from 0 for each bit-length. So we only use unary head for 
+allocating a number of bits;and correspondingly a number of literals. 
+We  can also use the unary head for a list of numbers of the same bit-length.
+
+------------
+
+New syntax for meta-rules: use brackets.
+
+normal rule: (i1....iN) (o1.....oN)
+
+with i1...oN decimal integers != 0 
+
+(You could use 0 in output as conflict. Or zeros are just padding... that could be useful for 
+variable length interpretation of fixed length rules)
+
+meta rule: (i1.....iN) ((o11....o1X)(o21....o2Y)(o31....o3Z)...)
+
+So we encode an output literal P using a sequence of K literals (oP1....oPK). 
+
+Deeper nestings of the output side could be used to encode meta-rules that add meta-rules.
+
+Deeper nestings of the input side could be used for encoding meta rules too. In fact the general
+syntax for a depth-1  meta rule would be:
+
+meta rule:  ((i11....i1P)(i21....i2Q)(i31....i3R)...) ((o11....o1X)(o21....o2Y)(o31....o3Z)...)
+
+meta rules and normal rules can also be combined: A rule with 
+nesting two deep is a normal rule. Deeper nestings are meta-rules.
+Shallower nestings could be used for ....?
+
+
+
+
+
